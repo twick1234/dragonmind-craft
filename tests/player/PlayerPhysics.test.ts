@@ -50,9 +50,9 @@ describe('PlayerPhysics', () => {
   });
 
   test('velocity capped in water', () => {
-    // Mock water block
-    const waterBlocks = (x: number, y: number, z: number) => (y === 1 ? 7 : 0);
-    const p = new PlayerPhysics(0, 1, 0);
+    // Water fills y <= 5 so player stays submerged throughout test
+    const waterBlocks = (x: number, y: number, z: number) => (y <= 5 ? 7 : 0);
+    const p = new PlayerPhysics(0, 3, 0);
     for (let i = 0; i < 20; i++) {
       p.update(0.05, new THREE.Vector3(), 5, false, waterBlocks);
     }

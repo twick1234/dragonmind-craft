@@ -9,6 +9,7 @@ export class WorldGen {
   private caveNoise: SimplexNoise;
   private cave2Noise: SimplexNoise;
   private oreNoise: SimplexNoise;
+  private featureNoise: SimplexNoise;
   private biomeManager: BiomeManager;
   readonly seed: number;
 
@@ -19,7 +20,14 @@ export class WorldGen {
     this.caveNoise = new SimplexNoise(seed + 2);
     this.cave2Noise = new SimplexNoise(seed + 3);
     this.oreNoise = new SimplexNoise(seed + 4);
+    this.featureNoise = new SimplexNoise(seed + 5);
     this.biomeManager = new BiomeManager(seed);
+  }
+
+  /** Deterministic pseudo-random float [0,1) based on world coordinates */
+  private rng(x: number, y: number, z: number): number {
+    const n = Math.abs(this.featureNoise.noise3D(x * 0.3, y * 0.3, z * 0.3));
+    return (n + 1) / 2;
   }
 
   getBiomeManager(): BiomeManager { return this.biomeManager; }
@@ -61,7 +69,7 @@ export class WorldGen {
 
         // Bedrock
         setBlock(lx, 0, lz, BlockType.BEDROCK);
-        if (Math.random() < 0.5) setBlock(lx, 1, lz, BlockType.BEDROCK);
+        if (this.rng(wx, 1, wz) < 0.5) setBlock(lx, 1, lz, BlockType.BEDROCK);
 
         for (let y = 2; y < CHUNK_HEIGHT; y++) {
           if (y > surfaceY) {
@@ -109,30 +117,30 @@ export class WorldGen {
         if (surfaceY < SEA_LEVEL) continue;
 
         // Trees
-        if (biome.treeType && Math.random() < biome.treeFrequency) {
+        if (biome.treeType && this.rng(wx, 0, wz) < biome.treeFrequency) {
           this.placeTree(data, lx, surfaceY + 1, lz, biome, getIdx, setBlock, CHUNK_SIZE);
         }
 
         // Tall grass
-        if (biome.grassFrequency > 0 && Math.random() < biome.grassFrequency) {
+        if (biome.grassFrequency > 0 && this.rng(wx, 1, wz) < biome.grassFrequency) {
           setBlock(lx, surfaceY + 1, lz, BlockType.TALL_GRASS);
         }
 
         // Flowers
-        if (biome.flowerFrequency > 0 && Math.random() < biome.flowerFrequency) {
-          setBlock(lx, surfaceY + 1, lz, Math.random() < 0.5 ? BlockType.FLOWER_RED : BlockType.FLOWER_YELLOW);
+        if (biome.flowerFrequency > 0 && this.rng(wx, 2, wz) < biome.flowerFrequency) {
+          setBlock(lx, surfaceY + 1, lz, this.rng(wx, 3, wz) < 0.5 ? BlockType.FLOWER_RED : BlockType.FLOWER_YELLOW);
         }
 
         // Cactus in desert
-        if (biome.name === Biome.DESERT && Math.random() < 0.005) {
-          const height = 1 + Math.floor(Math.random() * 3);
+        if (biome.name === Biome.DESERT && this.rng(wx, 4, wz) < 0.005) {
+          const height = 1 + Math.floor(this.rng(wx, 5, wz) * 3);
           for (let cy = 0; cy < height; cy++) {
             setBlock(lx, surfaceY + 1 + cy, lz, BlockType.CACTUS);
           }
         }
 
         // Dragon crystals in dragon zones
-        if (biome.name === Biome.MOUNTAINS && Math.random() < 0.002) {
+        if (biome.name === Biome.MOUNTAINS && this.rng(wx, 6, wz) < 0.002) {
           setBlock(lx, surfaceY + 1, lz, BlockType.DRAGON_CRYSTAL);
         }
       }
@@ -182,7 +190,7 @@ export class WorldGen {
     chunkSize: number
   ) {
     if (!biome.treeType || !biome.treeLeaves) return;
-    const trunkHeight = 4 + Math.floor(Math.random() * 3);
+    const trunkHeight = 4 + Math.floor(this.rng(lx, ly, lz) * 3);
 
     // Trunk
     for (let ty = 0; ty < trunkHeight; ty++) {
