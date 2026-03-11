@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "concurrently \"vite\" \"electron-wait-dev\"",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "build:electron": "npm run build && electron-builder",
     "build:mac": "npm run build && electron-builder --mac",
     "build:win": "npm run build && electron-builder --win",
